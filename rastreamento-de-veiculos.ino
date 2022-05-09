@@ -9,10 +9,32 @@ boolean LocationIsValid = false;
 boolean StopContinuousLocation = false;
 
 TinyGPSPlus gps;
+String value;
 String phone_number;
 String message_text;
-String mode = "None";
-String single_location = "Localização";
+String received_message = "loc";
+String Message;
+
+void setup() {
+  mySerial.begin(9600);
+  Serial.begin(9600);
+  Serial.println("Getting single location!");
+  phone_number = "+5594984007107";
+  getGPS();
+  sendLocationSMS();
+}
+
+void loop() {
+
+  phone_number = "094981210430";
+  if (message_text == received_message) {
+    Serial.println("Getting single location!");
+    getGPS();
+    sendLocationSMS();
+  }
+
+}
+
 
 String SIM808(String value) {
   String Out;
@@ -111,23 +133,51 @@ void getGPS() {
     delay(100);
     if (gps.location.isValid())
     {
-      Location_isValid_flag = true;
+      LocationIsValid = true;
       Message = String(gps.location.lat(), 6);
       Message += ",";
       Message += String(gps.location.lng(), 6);
       Message += " ";
       Serial.println(Message);
     }
-  } while (!Location_isValid_flag);
+  } while (!LocationIsValid);
 }
 
-void setup() {
-  mySerial.begin(9600);
-  Serial.begin(9600);
+void sendLocationSMS() {
+  Serial.println("Start Sending The SMS\n");
+  Serial.println("Sending The SMS to");
+  Serial.println(phone_number);
+
+  SIM808("AT+CMGS=" + phone_number );
+  delay(200);
+  mySerial.println("Open This Link:");
+  mySerial.print("https://www.google.com/maps/place/");
+  SIM808(Message);
+  Serial.println("Message Sent!");
+  Serial.println("Delete All Previous Messages");
+  SIM808("AT+CMGD=1,4");
 }
 
-void loop() {
-  //Starting SMS
+
+void displayInfo()
+{
+  Serial.print(F("Location: "));
+  if (gps.location.isValid())
+  {
+    Serial.print(gps.location.lat(), 6);
+    Serial.print(F(","));
+    Serial.print(gps.location.lng(), 6);
+  }
+  else
+  {
+    Serial.print(F("INVALID"));
+  }
+
+  Serial.println();
+}
+
+/*
+ //Starting SMS
   Serial.println("Start\n");
   Serial.println("Check AT Connection");
   value = SIM808("AT");
@@ -162,7 +212,7 @@ void loop() {
   phone_number.remove(0, 20);
   phone_number.remove(15, phone_number.length());
   message_text = value;
-  message_text.remove(0, 63);
+  message_text.remove(0, 62);
   message_text.remove(message_text.length() - 6, message_text.length());
 
   Serial.println("Phone Number:");
@@ -170,11 +220,5 @@ void loop() {
 
   Serial.println("Message Text:");
   Serial.println(message_text);
-
-
-  if (message_text == single_location) {
-    Serial.println("Getting single location!");
-    getGPS();
-  }
-  
-}
+  Serial.println("//Message end//");
+*/
